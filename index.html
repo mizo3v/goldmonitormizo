@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Monitor (W Code)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: white;
+            text-align: center;
+            padding-top: 30px;
+        }
+        .container {
+            background-color: #2d2d2d;
+            padding: 20px 40px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        h1 { color: #ffd700; margin-top: 0; }
+        .price-display {
+            font-size: 40px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 15px 0;
+        }
+        .grid-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column {
+            background: #383838;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .column h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #ddd;
+        }
+        .input-group {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #444;
+            color: white;
+            width: 90px;
+            margin-left: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ffd700;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            width: 100%;
+        }
+        button:hover { background-color: #e6c200; }
+        .status { margin-top: 15px; color: #aaa; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gold Monitor (W Code)</h1>
+        
+        <div class="price-display" id="price">Loading...</div>
+        
+        <div class="grid-container">
+            <!-- Drop Alerts -->
+            <div class="column">
+                <h3>📉 Drop Alerts</h3>
+                <div class="input-group">
+                    <label>Target 1:</label>
+                    <input type="number" id="drop1" placeholder="e.g. 124.60" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Target 2:</label>
+                    <input type="number" id="drop2" placeholder="e.g. 120.00" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Target 3:</label>
+                    <input type="number" id="drop3" placeholder="e.g. 115.00" step="0.01">
+                </div>
+            </div>
+
+            <!-- Roof Alerts -->
+            <div class="column">
+                <h3>📈 Roof Alerts</h3>
+                <div class="input-group">
+                    <label>Target 1:</label>
+                    <input type="number" id="roof1" placeholder="e.g. 130.00" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Target 2:</label>
+                    <input type="number" id="roof2" placeholder="e.g. 135.00" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Target 3:</label>
+                    <input type="number" id="roof3" placeholder="e.g. 140.00" step="0.01">
+                </div>
+            </div>
+        </div>
+
+        <button onclick="enableAlerts()">Enable Desktop Alerts</button>
+        
+        <div class="status" id="status">Checking every 20 seconds...</div>
+    </div>
+
+    <script>
+        const CHECK_INTERVAL_MS = 20000; 
+        let notificationsAllowed = false;
+        
+        let triggeredAlerts = {
+            drop1: false, drop2: false, drop3: false,
+            roof1: false, roof2: false, roof3: false
+        };
+
+        // --- 0. LOAD SAVED NUMBERS WHEN PAGE OPENS ---
+        window.onload = function() {
+            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
+            inputs.forEach(id => {
+                const savedValue = localStorage.getItem("gold_" + id);
+                if (savedValue !== null) {
+                    document.getElementById(id).value = savedValue;
+                }
+            });
+        };
+
+        // --- SAVE NUMBERS WHEN YOU TYPE ---
+        function saveValue(id) {
+            const val = document.getElementById(id).value;
+            localStorage.setItem("gold_" + id, val);
+        }
+
+        // Attach the save function to all input boxes
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener("input", () => saveValue(id));
+            });
+        });
+
+        // --- Audio Setup (Synthesizer for Beeps) ---
+        let audioCtx;
+        function playBeeps(numBeeps) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            let time = audioCtx.currentTime;
+            for (let i = 0; i < numBeeps; i++) {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                
+                osc.type = 'sine'; 
+                osc.frequency.setValueAtTime(880, time); 
+                
+                gain.gain.setValueAtTime(0, time);
+                gain.gain.linearRampToValueAtTime(0.5, time + 0.05);
+                gain.gain.linearRampToValueAtTime(0, time + 0.2);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(time);
+                osc.stop(time + 0.25);
+                time += 0.35; 
+            }
+        }
+
+        // --- 1. Enable Alerts & Audio ---
+        function enableAlerts() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            audioCtx.resume();
+
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notifications.");
+                return;
+            }
+            
+            Notification.requestPermission().then(function (permission) {
+                if (permission === "granted") {
+                    notificationsAllowed = true;
+                    document.getElementById("status").innerText = "Alerts enabled! Monitoring...";
+                    new Notification("Gold Monitor (W Code)", { body: "You will now receive alerts here." });
+                } else {
+                    document.getElementById("status").innerText = "Alerts blocked. Please allow notifications.";
+                }
+            });
+        }
+
+        // --- 2. Fetch the Gold Price ---
+        async function fetchGoldPrice() {
+            try {
+                const response = await fetch("https://xaus.com/api/v1/spot?unit=gram&compact=1");
+                const data = await response.json();
+                if (data.data_state && data.data_state.status === "fresh") {
+                    return parseFloat(data.xau.price);
+                }
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // --- 3. The Main Loop ---
+        async function updatePrice() {
+            const price = await fetchGoldPrice();
+            
+            if (price !== null) {
+                document.getElementById("price").innerText = price.toFixed(2) + " USD/g";
+                checkThresholds(price);
+            } else {
+                document.getElementById("status").innerText = "Connection error. Retrying...";
+            }
+        }
+
+        // --- 4. Check All 6 Targets ---
+        function checkThresholds(price) {
+            const targets = [
+                { id: "drop1", type: "drop" },
+                { id: "drop2", type: "drop" },
+                { id: "drop3", type: "drop" },
+                { id: "roof1", type: "roof" },
+                { id: "roof2", type: "roof" },
+                { id: "roof3", type: "roof" }
+            ];
+
+            targets.forEach(target => {
+                const val = parseFloat(document.getElementById(target.id).value);
+                
+                if (!isNaN(val)) {
+                    // --- DROP ALERTS (1 Beep) ---
+                    if (target.type === "drop") {
+                        if (price <= val && !triggeredAlerts[target.id]) {
+                            playBeeps(1);
+                            triggerAlert(`📉 DROP ALERT: Price is under ${val} USD/g!\nCurrent: ${price.toFixed(2)}`);
+                            triggeredAlerts[target.id] = true;
+                        } 
+                        else if (price > val + 0.10 && triggeredAlerts[target.id]) {
+                            triggeredAlerts[target.id] = false;
+                        }
+                    } 
+                    
+                    // --- ROOF ALERTS (2 Beeps) ---
+                    else if (target.type === "roof") {
+                        if (price >= val && !triggeredAlerts[target.id]) {
+                            playBeeps(2);
+                            triggerAlert(`📈 ROOF ALERT: Price is over ${val} USD/g!\nCurrent: ${price.toFixed(2)}`);
+                            triggeredAlerts[target.id] = true;
+                        }
+                        else if (price < val - 0.10 && triggeredAlerts[target.id]) {
+                            triggeredAlerts[target.id] = false;
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 5. Trigger the Popup ---
+        function triggerAlert(message) {
+            if (notificationsAllowed) {
+                new Notification("Gold Alert (W Code)", {
+                    body: message
+                });
+            } else {
+                alert(message);
+            }
+        }
+
+        // --- Start the program ---
+        updatePrice(); 
+        setInterval(updatePrice, CHECK_INTERVAL_MS);
+    </script>
+</body>
+</html>
