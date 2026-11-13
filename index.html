@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TNZ9WH3D"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
-
 
 
     <meta charset="UTF-8">
@@ -159,6 +159,7 @@
             font-weight: bold;
             margin-top: 15px;
             width: 100%;
+            transition: 0.3s;
         }
         .main-btn:hover { background-color: #e6c200; }
         .status { 
@@ -174,7 +175,7 @@
 <body>
 
     <div class="container">
-        <h1>Gold Monitor Mizo</h1>
+        <h1>Gold Monitor (W Code)</h1>
         <div class="price-display" id="price">Loading...</div>
         
         <div class="controls-row">
@@ -219,7 +220,6 @@
             <span>seconds</span>
         </div>
 
-        <!-- Updated button text -->
         <button class="main-btn" id="enableBtn" onclick="enableAlerts()">Click to Activate (Required for sound)</button>
         
         <div class="status" id="status">
@@ -244,6 +244,16 @@
 
         let triggeredAlerts = { drop1: false, drop2: false, drop3: false, roof1: false, roof2: false, roof3: false };
         const targetIds = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
+
+        // --- AUDIO UNLOCK FUNCTION ---
+        let audioCtx;
+        function unlockAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // Unlock audio on the very first click anywhere on the page
+        document.addEventListener('click', unlockAudio, { once: true });
 
         function initChart() {
             const ctx = document.getElementById('goldChart').getContext('2d');
@@ -351,10 +361,17 @@
             else document.getElementById("unitSelect").value = "ounce";
             
             updateUnitAndTargets(false); 
-            
-            // Check if notifications were already allowed by the browser
-            if ("Notification" in window && Notification.permission === "granted") {
-                document.getElementById("enableBtn").innerText = "Activate Sound & Monitor";
+
+            // --- CHECK SAVED ACTIVATION STATE ---
+            if (localStorage.getItem("gold_activated") === "true") {
+                notificationsAllowed = true;
+                document.getElementById("enableBtn").innerText = "✅ Activated (Click page to unlock sound)";
+                document.getElementById("enableBtn").style.backgroundColor = "#4CAF50";
+                document.getElementById("enableBtn").style.color = "white";
+                document.getElementById("status").innerHTML = `
+                    <span class="status-success">✅ Monitoring active.</span><br>
+                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
+                `;
             }
             
             loadHistory().then(() => {
@@ -409,9 +426,10 @@
             }
         }
 
-        let audioCtx;
         function playBeeps(numBeeps) {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            unlockAudio(); // Ensure audio is awake
+            if (!audioCtx) return;
+
             let time = audioCtx.currentTime;
             for (let i = 0; i < numBeeps; i++) {
                 let osc = audioCtx.createOscillator();
@@ -436,43 +454,23 @@
         }
 
         function enableAlerts() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            audioCtx.resume();
+            unlockAudio();
 
-            if (!("Notification" in window)) {
-                alert("This browser does not support desktop notifications.");
-                return;
+            // Save the choice to the browser's memory
+            localStorage.setItem("gold_activated", "true");
+            notificationsAllowed = true;
+
+            document.getElementById("enableBtn").innerText = "✅ Activated!";
+            document.getElementById("enableBtn").style.backgroundColor = "#4CAF50";
+            document.getElementById("enableBtn").style.color = "white";
+            document.getElementById("status").innerHTML = `
+                <span class="status-success">✅ Monitoring active.</span><br>
+                <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
+            `;
+
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
             }
-            
-            // If already granted, just activate immediately
-            if (Notification.permission === "granted") {
-                notificationsAllowed = true;
-                document.getElementById("enableBtn").innerText = "✅ Activated!";
-                document.getElementById("enableBtn").style.backgroundColor = "#4CAF50";
-                document.getElementById("enableBtn").style.color = "white";
-                document.getElementById("status").innerHTML = `
-                    <span class="status-success">✅ Monitoring active.</span><br>
-                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
-                `;
-                return;
-            }
-            
-            // If not granted, ask for permission
-            Notification.requestPermission().then(function (permission) {
-                if (permission === "granted") {
-                    notificationsAllowed = true;
-                    document.getElementById("enableBtn").innerText = "✅ Activated!";
-                    document.getElementById("enableBtn").style.backgroundColor = "#4CAF50";
-                    document.getElementById("enableBtn").style.color = "white";
-                    document.getElementById("status").innerHTML = `
-                        <span class="status-success">✅ Monitoring active.</span><br>
-                        <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
-                    `;
-                    new Notification("Gold Monitor (W Code)", { body: "You will now receive alerts here." });
-                } else {
-                    document.getElementById("status").innerText = "Alerts blocked. Please allow notifications.";
-                }
-            });
         }
 
         async function fetchLiveGoldPrice() {
@@ -488,12 +486,6 @@
             if (intervalId) clearInterval(intervalId);
             let seconds = parseFloat(document.getElementById("checkTime").value);
             if (isNaN(seconds) || seconds < 5) seconds = 20;
-
-            if (!notificationsAllowed) {
-                document.getElementById("status").innerHTML = `
-                    Waiting for you to enable alerts...<br>
-                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>`;
-            }
 
             updatePrice();
             intervalId = setInterval(updatePrice, seconds * 1000);
@@ -524,6 +516,8 @@
         }
 
         function checkThresholds(price) {
+            if (!notificationsAllowed) return; 
+
             const targets = [
                 { id: "drop1", type: "drop" }, { id: "drop2", type: "drop" }, { id: "drop3", type: "drop" },
                 { id: "roof1", type: "roof" }, { id: "roof2", type: "roof" }, { id: "roof3", type: "roof" }
@@ -557,8 +551,11 @@
         }
 
         function triggerAlert(message) {
-            if (notificationsAllowed) new Notification("Gold Alert (W Code)", { body: message });
-            else alert(message);
+            if (notificationsAllowed && "Notification" in window && Notification.permission === "granted") {
+                new Notification("Gold Alert (W Code)", { body: message });
+            } else {
+                alert(message);
+            }
         }
     </script>
 </body>
