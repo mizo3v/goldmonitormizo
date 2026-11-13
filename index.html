@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gold Monitor (W Code)</title>
+    <title>Gold Monitor  mizo </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -59,6 +59,21 @@
             width: 90px;
             margin-left: 10px;
         }
+        .time-group {
+            margin-top: 20px;
+            padding: 15px;
+            background: #383838;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .time-group input {
+            width: 70px;
+            text-align: center;
+            margin-left: 0;
+        }
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -78,7 +93,7 @@
 <body>
 
     <div class="container">
-        <h1>Gold Monitor (W Code)</h1>
+        <h1>Gold Monitor  Mizo</h1>
         
         <div class="price-display" id="price">Loading...</div>
         
@@ -118,29 +133,38 @@
             </div>
         </div>
 
+        <!-- Check Time Setting -->
+        <div class="time-group">
+            <label>Check price every:</label>
+            <input type="number" id="checkTime" value="20" min="5" step="1">
+            <span>seconds</span>
+        </div>
+
         <button onclick="enableAlerts()">Enable Desktop Alerts</button>
         
         <div class="status" id="status">Checking every 20 seconds...</div>
     </div>
 
     <script>
-        const CHECK_INTERVAL_MS = 20000; 
         let notificationsAllowed = false;
+        let intervalId = null;
         
         let triggeredAlerts = {
             drop1: false, drop2: false, drop3: false,
             roof1: false, roof2: false, roof3: false
         };
 
-        // --- 0. LOAD SAVED NUMBERS WHEN PAGE OPENS ---
+        // --- 0. LOAD SAVED NUMBERS AND TIME WHEN PAGE OPENS ---
         window.onload = function() {
-            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
+            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3", "checkTime"];
             inputs.forEach(id => {
                 const savedValue = localStorage.getItem("gold_" + id);
                 if (savedValue !== null) {
                     document.getElementById(id).value = savedValue;
                 }
             });
+            // Start the loop with the loaded time
+            startMonitoring();
         };
 
         // --- SAVE NUMBERS WHEN YOU TYPE ---
@@ -151,9 +175,15 @@
 
         // Attach the save function to all input boxes
         document.addEventListener("DOMContentLoaded", () => {
-            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
+            const inputs = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3", "checkTime"];
             inputs.forEach(id => {
-                document.getElementById(id).addEventListener("input", () => saveValue(id));
+                document.getElementById(id).addEventListener("input", () => {
+                    saveValue(id);
+                    // If they change the time, restart the timer immediately
+                    if (id === "checkTime") {
+                        startMonitoring();
+                    }
+                });
             });
         });
 
@@ -222,7 +252,28 @@
             }
         }
 
-        // --- 3. The Main Loop ---
+        // --- 3. The Main Loop Setup ---
+        function startMonitoring() {
+            // Clear any existing timer
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+
+            // Get the time from the input box, default to 20 if empty
+            let seconds = parseFloat(document.getElementById("checkTime").value);
+            if (isNaN(seconds) || seconds < 5) {
+                seconds = 20; // Minimum 5 seconds to protect the API
+            }
+
+            document.getElementById("status").innerText = `Checking every ${seconds} seconds...`;
+
+            // Check immediately
+            updatePrice();
+
+            // Start the repeating timer
+            intervalId = setInterval(updatePrice, seconds * 1000);
+        }
+
         async function updatePrice() {
             const price = await fetchGoldPrice();
             
@@ -286,10 +337,6 @@
                 alert(message);
             }
         }
-
-        // --- Start the program ---
-        updatePrice(); 
-        setInterval(updatePrice, CHECK_INTERVAL_MS);
     </script>
 </body>
 </html>
