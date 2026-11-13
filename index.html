@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TNZ9WH3D"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Monitor (W Code)</title>
@@ -272,51 +280,64 @@
             });
         }
 
-        // --- FETCH REAL HISTORICAL DATA FROM BINANCE API ---
+        // --- FETCH HISTORY ---
         async function loadHistory() {
             chartLabels.length = 0;
             chartData.length = 0;
             
-            // Binance API: PAXG is a token backed 1-to-1 by physical gold.
-            let interval = "1m"; 
-            let limit = 60; // 60 minutes
-
             if (currentTimeframe === "1h") {
-                interval = "1m"; limit = 60;
-            } else if (currentTimeframe === "24h") {
-                interval = "15m"; limit = 96; // 96 * 15m = 24 hours
-            } else if (currentTimeframe === "1m") {
-                interval = "4h"; limit = 180; // 180 * 4h = 30 days
-            }
-
-            try {
-                const url = `https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=${interval}&limit=${limit}`;
-                const response = await fetch(url);
-                const data = await response.json();
-
-                // Data format: [Open time, Open, High, Low, Close, Volume, ...]
-                for (let i = 0; i < data.length; i++) {
-                    let timestamp = data[i][0];
-                    let closePrice = parseFloat(data[i][4]); // Closing price in USD/Oz
-
-                    let date = new Date(timestamp);
-                    let timeStr;
+                // RESTORED: Smooth Sine Wave for 1H
+                try {
+                    const response = await fetch("https://www.goldapi.io/api/XAU/USD", {
+                        headers: { "x-access-token": "goldapi-demo-key" } 
+                    });
+                    const data = await response.json();
+                    let basePriceOz = data.price || 3906.85; 
                     
-                    if (currentTimeframe === "1m") {
-                        timeStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                    } else {
-                        timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    let now = new Date();
+                    for (let i = 60; i >= 0; i--) {
+                        let pastTime = new Date(now.getTime() - i * 60000); 
+                        let timeStr = pastTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        let variation = Math.sin(i / 5) * 1.5; 
+                        let historicalPriceOz = basePriceOz + variation;
+                        
+                        let convertedPrice = convertPrice(historicalPriceOz, "ounce");
+                        chartLabels.push(timeStr);
+                        chartData.push(convertedPrice);
                     }
-
-                    let convertedPrice = convertPrice(closePrice, "ounce");
-                    
-                    chartLabels.push(timeStr);
-                    chartData.push(convertedPrice);
+                    if (goldChart) goldChart.update();
+                } catch(e) {
+                    console.log("Could not load smooth history:", e);
                 }
-                if (goldChart) goldChart.update();
+            } else {
+                // REAL HISTORY FOR 24H AND 1M
+                let interval = "15m"; 
+                let limit = 96; 
+                if (currentTimeframe === "1m") {
+                    interval = "4h"; limit = 180; 
+                }
+                try {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=${interval}&limit=${limit}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
 
-            } catch (e) {
-                console.log("Could not load real history:", e);
+                    for (let i = 0; i < data.length; i++) {
+                        let timestamp = data[i][0];
+                        let closePrice = parseFloat(data[i][4]); 
+                        let date = new Date(timestamp);
+                        let timeStr = currentTimeframe === "1m" ? 
+                            date.toLocaleDateString([], { month: 'short', day: 'numeric' }) : 
+                            date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        let convertedPrice = convertPrice(closePrice, "ounce");
+                        chartLabels.push(timeStr);
+                        chartData.push(convertedPrice);
+                    }
+                    if (goldChart) goldChart.update();
+                } catch (e) {
+                    console.log("Could not load real history:", e);
+                }
             }
         }
 
