@@ -1,197 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TNZ9WH3D"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-</script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Monitor (W Code)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #1e1e1e;
             color: white;
             text-align: center;
-            padding-top: 30px;
+            padding-top: 10px;
+            padding-bottom: 20px;
+            margin: 0;
         }
         .container {
             background: #2d2d2d;
-            padding: 20px 40px;
+            padding: 15px 25px;
             border-radius: 10px;
             display: inline-block;
             box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            width: 95%;
+            max-width: 650px;
         }
-        h1 { color: #ffd700; margin-top: 0; }
+        h1 { color: #ffd700; margin-top: 0; font-size: 22px; margin-bottom: 10px; }
         .price-display {
-            font-size: 40px;
+            font-size: 32px;
             font-weight: bold;
             color: #ffd700;
-            margin: 15px 0;
+            margin: 10px 0;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
         .unit-selector {
-            margin-bottom: 20px;
             background: #383838;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
+            font-size: 14px;
+        }
+        .timeframe-selector {
+            background: #383838;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            gap: 5px;
+        }
+        .timeframe-selector button {
+            background: #444;
+            color: white;
+            border: 1px solid #555;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 0;
+            width: auto;
+        }
+        .timeframe-selector button.active {
+            background: #ffd700;
+            color: black;
+            font-weight: bold;
+            border-color: #ffd700;
         }
         select {
-            padding: 8px;
-            font-size: 16px;
+            padding: 6px;
+            font-size: 14px;
             border-radius: 5px;
             border: 1px solid #555;
             background: #444;
             color: white;
             cursor: pointer;
         }
+        .chart-container {
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 15px 0;
+            height: 180px; 
+            width: 100%;
+            box-sizing: border-box;
+        }
         .grid-container {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
+            gap: 15px;
+            margin-top: 15px;
         }
         .column {
             background: #383838;
-            padding: 15px;
+            padding: 10px 15px;
             border-radius: 8px;
             text-align: left;
+            flex: 1;
         }
         .column h3 {
             margin-top: 0;
             text-align: center;
             color: #ddd;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
         .input-group {
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 13px;
         }
         input {
-            padding: 8px;
-            font-size: 16px;
+            padding: 5px;
+            font-size: 14px;
             border-radius: 5px;
             border: 1px solid #555;
             background: #444;
             color: white;
-            width: 90px;
+            width: 75px;
             margin-left: 10px;
         }
         .time-group {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 10px;
             background: #383838;
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
+            font-size: 13px;
         }
         .time-group input {
-            width: 70px;
+            width: 60px;
             text-align: center;
             margin-left: 0;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
+        .main-btn {
+            padding: 8px 15px;
+            font-size: 14px;
             background-color: #ffd700;
             color: black;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 20px;
+            margin-top: 15px;
             width: 100%;
         }
-        button:hover { background-color: #e6c200; }
-        
+        .main-btn:hover { background-color: #e6c200; }
         .status { 
-            margin-top: 20px; 
+            margin-top: 12px; 
             color: #aaa; 
-            font-size: 14px; 
-            line-height: 1.5;
+            font-size: 12px; 
+            line-height: 1.4;
         }
-        .status-success {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .beep-info {
-            font-size: 13px;
-            color: #ffd700;
-            margin-top: 5px;
-        }
+        .status-success { color: #4CAF50; font-weight: bold; }
+        .beep-info { font-size: 11px; color: #ffd700; margin-top: 4px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Gold Monitor Mizo</h1>
-        
         <div class="price-display" id="price">Loading...</div>
         
-        <!-- Unit Selector -->
-        <div class="unit-selector">
-            <label>Select Unit: </label>
-            <select id="unitSelect" onchange="changeUnit()">
-                <option value="ounce">1 Ounce (oz)</option>
-                <option value="gram">1 Gram (g)</option>
-                <option value="pound">8g Gold Pound (King George)</option>
-            </select>
+        <div class="controls-row">
+            <div class="unit-selector">
+                <label>Unit: </label>
+                <select id="unitSelect" onchange="changeUnit()">
+                    <option value="ounce">1 Ounce (oz)</option>
+                    <option value="gram">1 Gram (g)</option>
+                    <option value="pound">8g Gold Pound</option>
+                </select>
+            </div>
+            
+            <div class="timeframe-selector">
+                <button id="btn-1h" class="active" onclick="changeTimeframe('1h')">1H</button>
+                <button id="btn-24h" onclick="changeTimeframe('24h')">24H</button>
+                <button id="btn-1m" onclick="changeTimeframe('1m')">1M</button>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="goldChart"></canvas>
         </div>
 
         <div class="grid-container">
-            <!-- Drop Alerts -->
             <div class="column">
                 <h3>📉 Drop Alerts</h3>
-                <div class="input-group">
-                    <label>Target 1:</label>
-                    <input type="number" id="drop1" placeholder="Target" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>Target 2:</label>
-                    <input type="number" id="drop2" placeholder="Target" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>Target 3:</label>
-                    <input type="number" id="drop3" placeholder="Target" step="0.01">
-                </div>
+                <div class="input-group"><label>Target 1:</label><input type="number" id="drop1" placeholder="Target" step="0.01"></div>
+                <div class="input-group"><label>Target 2:</label><input type="number" id="drop2" placeholder="Target" step="0.01"></div>
+                <div class="input-group"><label>Target 3:</label><input type="number" id="drop3" placeholder="Target" step="0.01"></div>
             </div>
-
-            <!-- Roof Alerts -->
             <div class="column">
                 <h3>📈 Roof Alerts</h3>
-                <div class="input-group">
-                    <label>Target 1:</label>
-                    <input type="number" id="roof1" placeholder="Target" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>Target 2:</label>
-                    <input type="number" id="roof2" placeholder="Target" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label>Target 3:</label>
-                    <input type="number" id="roof3" placeholder="Target" step="0.01">
-                </div>
+                <div class="input-group"><label>Target 1:</label><input type="number" id="roof1" placeholder="Target" step="0.01"></div>
+                <div class="input-group"><label>Target 2:</label><input type="number" id="roof2" placeholder="Target" step="0.01"></div>
+                <div class="input-group"><label>Target 3:</label><input type="number" id="roof3" placeholder="Target" step="0.01"></div>
             </div>
         </div>
 
-        <!-- Check Time Setting -->
         <div class="time-group">
-            <label>Check price every:</label>
+            <label>Check every:</label>
             <input type="number" id="checkTime" value="20" min="5" step="1">
             <span>seconds</span>
         </div>
 
-        <button onclick="enableAlerts()">Enable Desktop Alerts</button>
+        <button class="main-btn" onclick="enableAlerts()">Enable Desktop Alerts</button>
         
         <div class="status" id="status">
             Waiting for you to enable alerts...<br>
-            <span class="beep-info">Sound Guide: 📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
+            <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
         </div>
     </div>
 
@@ -201,35 +224,138 @@
         
         let currentUnit = "ounce"; 
         let currentUnitText = "USD/oz";
+        let currentTimeframe = "1h";
         
         const GRAMS_PER_OUNCE = 31.1035;
+        
+        let goldChart;
+        const chartLabels = [];
+        const chartData = [];
 
-        let triggeredAlerts = {
-            drop1: false, drop2: false, drop3: false,
-            roof1: false, roof2: false, roof3: false
-        };
-
+        let triggeredAlerts = { drop1: false, drop2: false, drop3: false, roof1: false, roof2: false, roof3: false };
         const targetIds = ["drop1", "drop2", "drop3", "roof1", "roof2", "roof3"];
 
-        // --- 0. LOAD SAVED NUMBERS, TIME, AND UNIT ---
-        window.onload = function() {
-            const savedTime = localStorage.getItem("gold_checkTime");
-            if (savedTime !== null) {
-                document.getElementById("checkTime").value = savedTime;
+        function initChart() {
+            const ctx = document.getElementById('goldChart').getContext('2d');
+            goldChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Gold Price',
+                        data: chartData,
+                        borderColor: '#ffd700',
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        borderWidth: 1.5,
+                        pointRadius: 0, 
+                        fill: true,
+                        tension: 0.3 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { 
+                            display: true, 
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#aaa', font: { size: 9 }, maxTicksLimit: 6 }
+                        },
+                        y: {
+                            grid: { color: '#444', drawBorder: false },
+                            ticks: { color: '#aaa', font: { size: 10 } }
+                        }
+                    },
+                    animation: false 
+                }
+            });
+        }
+
+        // --- FETCH REAL HISTORICAL DATA FROM BINANCE API ---
+        async function loadHistory() {
+            chartLabels.length = 0;
+            chartData.length = 0;
+            
+            // Binance API: PAXG is a token backed 1-to-1 by physical gold.
+            let interval = "1m"; 
+            let limit = 60; // 60 minutes
+
+            if (currentTimeframe === "1h") {
+                interval = "1m"; limit = 60;
+            } else if (currentTimeframe === "24h") {
+                interval = "15m"; limit = 96; // 96 * 15m = 24 hours
+            } else if (currentTimeframe === "1m") {
+                interval = "4h"; limit = 180; // 180 * 4h = 30 days
             }
+
+            try {
+                const url = `https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=${interval}&limit=${limit}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Data format: [Open time, Open, High, Low, Close, Volume, ...]
+                for (let i = 0; i < data.length; i++) {
+                    let timestamp = data[i][0];
+                    let closePrice = parseFloat(data[i][4]); // Closing price in USD/Oz
+
+                    let date = new Date(timestamp);
+                    let timeStr;
+                    
+                    if (currentTimeframe === "1m") {
+                        timeStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    } else {
+                        timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+
+                    let convertedPrice = convertPrice(closePrice, "ounce");
+                    
+                    chartLabels.push(timeStr);
+                    chartData.push(convertedPrice);
+                }
+                if (goldChart) goldChart.update();
+
+            } catch (e) {
+                console.log("Could not load real history:", e);
+            }
+        }
+
+        function convertPrice(priceInOz, fromUnit) {
+            let priceInGrams = priceInOz / GRAMS_PER_OUNCE;
+            if (currentUnit === "gram") return priceInGrams;
+            else if (currentUnit === "ounce") return priceInOz;
+            else if (currentUnit === "pound") return 20 + (7 * priceInGrams);
+            return priceInOz;
+        }
+
+        window.onload = function() {
+            initChart(); 
+
+            const savedTime = localStorage.getItem("gold_checkTime");
+            if (savedTime !== null) document.getElementById("checkTime").value = savedTime;
 
             const savedUnit = localStorage.getItem("gold_unit");
-            if (savedUnit) {
-                document.getElementById("unitSelect").value = savedUnit;
-            } else {
-                document.getElementById("unitSelect").value = "ounce";
-            }
+            if (savedUnit) document.getElementById("unitSelect").value = savedUnit;
+            else document.getElementById("unitSelect").value = "ounce";
             
             updateUnitAndTargets(false); 
-            startMonitoring();
+            
+            loadHistory().then(() => {
+                startMonitoring();
+            });
         };
 
-        // --- SAVE NUMBERS WHEN YOU TYPE ---
+        function changeTimeframe(tf) {
+            currentTimeframe = tf;
+            
+            document.getElementById('btn-1h').classList.remove('active');
+            document.getElementById('btn-24h').classList.remove('active');
+            document.getElementById('btn-1m').classList.remove('active');
+            document.getElementById(`btn-${tf}`).classList.add('active');
+
+            loadHistory().then(() => updatePrice());
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("checkTime").addEventListener("input", (e) => {
                 localStorage.setItem("gold_checkTime", e.target.value);
@@ -243,9 +369,8 @@
             });
         });
 
-        // --- Update Unit & Load Targets ---
-        function changeUnit(triggerUpdate = true) {
-            updateUnitAndTargets(triggerUpdate);
+        function changeUnit() {
+            updateUnitAndTargets(true);
         }
 
         function updateUnitAndTargets(triggerUpdate = true) {
@@ -263,43 +388,32 @@
             });
 
             if (triggerUpdate) {
-                updatePrice(); 
+                loadHistory().then(() => updatePrice());
             }
         }
 
-        // --- Audio Setup ---
         let audioCtx;
         function playBeeps(numBeeps) {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             let time = audioCtx.currentTime;
             for (let i = 0; i < numBeeps; i++) {
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
-                
                 osc.type = 'sine'; 
                 osc.frequency.setValueAtTime(880, time); 
-                
                 gain.gain.setValueAtTime(0, time);
                 gain.gain.linearRampToValueAtTime(0.5, time + 0.05);
                 gain.gain.linearRampToValueAtTime(0, time + 0.2);
-                
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                
                 osc.start(time);
                 osc.stop(time + 0.25);
                 time += 0.35; 
             }
         }
 
-        // --- 1. Enable Alerts & Audio ---
         function enableAlerts() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             audioCtx.resume();
 
             if (!("Notification" in window)) {
@@ -316,51 +430,37 @@
                     `;
                     new Notification("Gold Monitor (W Code)", { body: "You will now receive alerts here." });
                 } else {
-                    document.getElementById("status").innerText = "Alerts blocked. Please allow notifications in your browser.";
+                    document.getElementById("status").innerText = "Alerts blocked. Please allow notifications.";
                 }
             });
         }
 
-        // --- 2. Fetch and Calculate Gold Price ---
-        async function fetchGoldPrice() {
+        async function fetchLiveGoldPrice() {
             try {
                 const response = await fetch("https://xaus.com/api/v1/spot?unit=gram&compact=1");
                 const data = await response.json();
                 if (data.data_state && data.data_state.status === "fresh") {
                     let priceInGrams = parseFloat(data.xau.price);
-                    
-                    if (currentUnit === "gram") {
-                        return priceInGrams;
-                    } else if (currentUnit === "ounce") {
-                        return priceInGrams * GRAMS_PER_OUNCE;
-                    } else if (currentUnit === "pound") {
-                        // YOUR FORMULA: 20 + (7 * price per gram)
-                        return 20 + (7 * priceInGrams);
-                    }
+                    let priceInOz = priceInGrams * GRAMS_PER_OUNCE;
+                    return convertPrice(priceInOz, "ounce");
                 }
                 return null;
-            } catch (error) {
-                return null;
-            }
+            } catch (error) { return null; }
         }
 
-        // --- 3. The Main Loop Setup ---
         function startMonitoring() {
             if (intervalId) clearInterval(intervalId);
-
             let seconds = parseFloat(document.getElementById("checkTime").value);
             if (isNaN(seconds) || seconds < 5) seconds = 20;
 
             if (!notificationsAllowed) {
                 document.getElementById("status").innerHTML = `
                     Waiting for you to enable alerts...<br>
-                    <span class="beep-info">Sound Guide: 📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
-                `;
+                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>`;
             } else {
                 document.getElementById("status").innerHTML = `
                     <span class="status-success">✅ Monitoring active (Every ${seconds}s).</span><br>
-                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
-                `;
+                    <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>`;
             }
 
             updatePrice();
@@ -368,30 +468,37 @@
         }
 
         async function updatePrice() {
-            const price = await fetchGoldPrice();
+            const price = await fetchLiveGoldPrice();
             
             if (price !== null) {
                 document.getElementById("price").innerText = price.toFixed(2) + " " + currentUnitText;
+                
+                if (currentTimeframe === "1h") {
+                    let timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    chartLabels.push(timeStr);
+                    chartData.push(price);
+
+                    if (chartLabels.length > 120) { 
+                        chartLabels.shift();
+                        chartData.shift();
+                    }
+                    if (goldChart) goldChart.update();
+                }
+
                 checkThresholds(price);
             } else {
                 document.getElementById("status").innerText = "Connection error. Retrying...";
             }
         }
 
-        // --- 4. Check All 6 Targets ---
         function checkThresholds(price) {
             const targets = [
-                { id: "drop1", type: "drop" },
-                { id: "drop2", type: "drop" },
-                { id: "drop3", type: "drop" },
-                { id: "roof1", type: "roof" },
-                { id: "roof2", type: "roof" },
-                { id: "roof3", type: "roof" }
+                { id: "drop1", type: "drop" }, { id: "drop2", type: "drop" }, { id: "drop3", type: "drop" },
+                { id: "roof1", type: "roof" }, { id: "roof2", type: "roof" }, { id: "roof3", type: "roof" }
             ];
 
             targets.forEach(target => {
                 const val = parseFloat(document.getElementById(target.id).value);
-                
                 if (!isNaN(val)) {
                     if (target.type === "drop") {
                         if (price <= val && !triggeredAlerts[target.id]) {
@@ -417,15 +524,9 @@
             });
         }
 
-        // --- 5. Trigger the Popup ---
         function triggerAlert(message) {
-            if (notificationsAllowed) {
-                new Notification("Gold Alert (W Code)", {
-                    body: message
-                });
-            } else {
-                alert(message);
-            }
+            if (notificationsAllowed) new Notification("Gold Alert (W Code)", { body: message });
+            else alert(message);
         }
     </script>
 </body>
