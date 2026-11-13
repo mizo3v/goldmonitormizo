@@ -7,7 +7,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Monitor (W Code)</title>
@@ -110,7 +110,6 @@
         }
         button:hover { background-color: #e6c200; }
         
-        /* Status text styling */
         .status { 
             margin-top: 20px; 
             color: #aaa; 
@@ -131,7 +130,7 @@
 <body>
 
     <div class="container">
-        <h1>Gold Monitor Mizo</h1>
+        <h1>Gold Monitor (W Code)</h1>
         
         <div class="price-display" id="price">Loading...</div>
         
@@ -190,7 +189,6 @@
 
         <button onclick="enableAlerts()">Enable Desktop Alerts</button>
         
-        <!-- New, clearer status text -->
         <div class="status" id="status">
             Waiting for you to enable alerts...<br>
             <span class="beep-info">Sound Guide: 📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
@@ -205,7 +203,6 @@
         let currentUnitText = "USD/oz";
         
         const GRAMS_PER_OUNCE = 31.1035;
-        const PURE_GRAMS_PER_POUND = 7.32; 
 
         let triggeredAlerts = {
             drop1: false, drop2: false, drop3: false,
@@ -313,7 +310,6 @@
             Notification.requestPermission().then(function (permission) {
                 if (permission === "granted") {
                     notificationsAllowed = true;
-                    // Update the status text to the new professional format
                     document.getElementById("status").innerHTML = `
                         <span class="status-success">✅ Monitoring active.</span><br>
                         <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
@@ -338,7 +334,8 @@
                     } else if (currentUnit === "ounce") {
                         return priceInGrams * GRAMS_PER_OUNCE;
                     } else if (currentUnit === "pound") {
-                        return priceInGrams * PURE_GRAMS_PER_POUND;
+                        // YOUR FORMULA: 20 + (7 * price per gram)
+                        return 20 + (7 * priceInGrams);
                     }
                 }
                 return null;
@@ -354,14 +351,12 @@
             let seconds = parseFloat(document.getElementById("checkTime").value);
             if (isNaN(seconds) || seconds < 5) seconds = 20;
 
-            // Only update the timer text if they haven't enabled alerts yet
             if (!notificationsAllowed) {
                 document.getElementById("status").innerHTML = `
                     Waiting for you to enable alerts...<br>
                     <span class="beep-info">Sound Guide: 📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
                 `;
             } else {
-                // If already enabled, show active status
                 document.getElementById("status").innerHTML = `
                     <span class="status-success">✅ Monitoring active (Every ${seconds}s).</span><br>
                     <span class="beep-info">📉 Drop = 1 Beep | 📈 Roof = 2 Beeps</span>
