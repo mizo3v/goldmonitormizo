@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-TNZ9WH3D"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Monitor (W Code)</title>
@@ -172,7 +172,7 @@
 <body>
 
     <div class="container">
-        <h1>Gold Monitor Mizo</h1>
+        <h1>Gold Monitor (W Code)</h1>
         <div class="price-display" id="price">Loading...</div>
         
         <div class="controls-row">
@@ -279,7 +279,6 @@
             });
         }
 
-        // --- FETCH FAST HISTORY FROM BINANCE ---
         async function loadHistory() {
             chartLabels.length = 0;
             chartData.length = 0;
@@ -300,7 +299,6 @@
                 const response = await fetch(url);
                 const data = await response.json();
 
-                // Remove last 2 minutes to prevent the snap glitch
                 let dataLength = data.length;
                 if (currentTimeframe === "1h" && dataLength > 2) {
                     dataLength -= 2; 
@@ -410,16 +408,23 @@
             for (let i = 0; i < numBeeps; i++) {
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
+                
                 osc.type = 'sine'; 
-                osc.frequency.setValueAtTime(880, time); 
+                osc.frequency.setValueAtTime(880, time); // 880 Hz pitch
+                
+                // Make the sound longer and noticeable
                 gain.gain.setValueAtTime(0, time);
-                gain.gain.linearRampToValueAtTime(0.5, time + 0.05);
-                gain.gain.linearRampToValueAtTime(0, time + 0.2);
+                gain.gain.linearRampToValueAtTime(0.6, time + 0.05); // Fade in fast
+                gain.gain.setValueAtTime(0.6, time + 0.7);           // Hold the sound for 0.7 seconds
+                gain.gain.linearRampToValueAtTime(0, time + 0.8);    // Fade out nicely
+                
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
+                
                 osc.start(time);
-                osc.stop(time + 0.25);
-                time += 0.35; 
+                osc.stop(time + 0.8); // Stop after 0.8 seconds
+                
+                time += 0.9; // Wait almost a full second before the next beep
             }
         }
 
@@ -446,7 +451,6 @@
             });
         }
 
-        // --- LIVE PRICE FROM BINANCE (SUPER FAST) ---
         async function fetchLiveGoldPrice() {
             try {
                 const response = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT");
