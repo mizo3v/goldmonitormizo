@@ -283,11 +283,11 @@
 
         document.addEventListener('click', unlockAudio, { once: true });
 
-        // ---- V MODEL PAGE (GitHub-hosted image) ----
+        // ---- V MODEL PAGE (GitHub-hosted images) ----
         function openVModelPage() {
-            // ⚠️ REPLACE THIS URL with the raw GitHub link of your uploaded image
-            const imageUrls = ["chart2.png", "chart3.png", "chart6.png"];
-    const imageUrl = imageUrls[0];   // <-- define the singular variable
+            // Your 3 pictures — made absolute so they resolve inside the blank popup
+            const imageUrls = ["chart2.png", "chart3.png", "chart6.png"]
+                .map(f => new URL(f, window.location.href).href);
 
             const pageContent = `<!DOCTYPE html>
 <html lang="en">
@@ -308,6 +308,7 @@
       margin: 0;
     }
     .card {
+      position: relative;
       background: #2d2d2d;
       border-radius: 24px;
       padding: 24px 24px 32px;
@@ -328,6 +329,38 @@
       justify-content: center;
       gap: 10px;
     }
+
+    /* ── Top-right vertical button stack ── */
+    .pic-switcher {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+    }
+    .pic-switcher button {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid #5f8bc9;
+      background: #3a6ea5;
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    .pic-switcher button:hover { background: #4a7eb8; }
+    .pic-switcher button.active {
+      background: #ffd700;
+      color: #1e1e1e;
+      border-color: #ffd700;
+    }
+
     .image-wrapper {
       background: #1a1a1a;
       border-radius: 18px;
@@ -348,9 +381,7 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.5);
       transition: transform 0.2s;
     }
-    .image-wrapper img:hover {
-      transform: scale(1.01);
-    }
+    .image-wrapper img:hover { transform: scale(1.01); }
     .placeholder-msg {
       color: #aaa;
       font-size: 15px;
@@ -398,17 +429,15 @@
       border-top: 1px solid #3a3a3a;
       padding-top: 16px;
     }
-    .note a {
-      color: #ffd700;
-      text-decoration: none;
-    }
-    .note a:hover {
-      text-decoration: underline;
-    }
+    .note a { color: #ffd700; text-decoration: none; }
+    .note a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
+    <!-- 3 small buttons, top-right, stacked -->
+    <div class="pic-switcher" id="picSwitcher"></div>
+
     <h1>V model</h1>
     <div class="image-wrapper" id="imageContainer">
       <!-- Image injected here -->
@@ -422,42 +451,44 @@
     </div>
   </div>
   <script>
-    const GITHUB_IMAGE_URL = "${imageUrl}";
-    
+    const IMAGES = ${JSON.stringify(imageUrls)};
+
     const container = document.getElementById('imageContainer');
     const statusSpan = document.getElementById('imgStatus');
+    const switcher = document.getElementById('picSwitcher');
 
-    if (GITHUB_IMAGE_URL.includes('yourusername') || GITHUB_IMAGE_URL.includes('your-image')) {
-      container.innerHTML = \`
-        <div class="placeholder-msg">
-          ⚠️ <strong>No image configured yet.</strong><br><br>
-          To display your picture, edit the <code>imageUrl</code> variable inside the 
-          <code>openVModelPage()</code> function in the main page.<br><br>
-          Replace it with the <strong>raw GitHub URL</strong> of your uploaded image, like:<br>
-          <code>https://raw.githubusercontent.com/yourname/repo/main/vmodel.png</code>
-        </div>
-      \`;
-      statusSpan.textContent = 'placeholder (edit imageUrl)';
-    } else {
+    function showImage(index) {
+      container.innerHTML = '';
       const img = document.createElement('img');
-      img.src = GITHUB_IMAGE_URL;
-      img.alt = 'V model picture';
-      img.onload = () => {
-        container.innerHTML = '';
-        container.appendChild(img);
-        statusSpan.textContent = 'loaded successfully ✓';
-      };
+      img.src = IMAGES[index];
+      img.alt = 'V model picture ' + (index + 1);
+      img.onload = () => { statusSpan.textContent = 'loaded successfully ✓'; };
       img.onerror = () => {
         container.innerHTML = \`
           <div class="placeholder-msg">
             ❌ Could not load the image.<br><br>
             Make sure the URL is correct and the repository is public.<br>
-            <code>\${GITHUB_IMAGE_URL}</code>
+            <code>\${IMAGES[index]}</code>
           </div>
         \`;
         statusSpan.textContent = 'failed to load';
       };
+      container.appendChild(img);
+
+      [...switcher.children].forEach((b, i) =>
+        b.classList.toggle('active', i === index));
     }
+
+    // build the 3 buttons
+    IMAGES.forEach((url, i) => {
+      const btn = document.createElement('button');
+      btn.textContent = (i + 1);
+      btn.title = 'Show picture ' + (i + 1);
+      btn.onclick = () => showImage(i);
+      switcher.appendChild(btn);
+    });
+
+    showImage(0);
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') window.close();
