@@ -284,13 +284,195 @@
         document.addEventListener('click', unlockAudio, { once: true });
 
         // ---- V MODEL PAGE (GitHub-hosted image) ----
-        function openVModelPage() {
-            // ⚠️ REPLACE THIS URL with the raw GitHub link of your uploaded image
-            const imageUrls = [
-  "chart2.png",
-  "chart3.png",
-  "chart6.png"
-];
+      function openVModelPage() {
+    // Use the first image, or join them / pick one
+    const imageUrl = "chart2.png";  // <-- define this variable
+
+    const pageContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V model · Gold Monitor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1e1e1e;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      margin: 0;
+    }
+    .card {
+      background: #2d2d2d;
+      border-radius: 24px;
+      padding: 24px 24px 32px;
+      max-width: 1000px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      border: 1px solid #3e3e3e;
+      text-align: center;
+    }
+    h1 {
+      color: #ffd700;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .image-wrapper {
+      background: #1a1a1a;
+      border-radius: 18px;
+      padding: 12px;
+      margin: 8px 0 18px;
+      border: 2px solid #3a3a3a;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .image-wrapper img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      display: block;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      transition: transform 0.2s;
+    }
+    .image-wrapper img:hover {
+      transform: scale(1.01);
+    }
+    .placeholder-msg {
+      color: #aaa;
+      font-size: 15px;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .placeholder-msg code {
+      background: #3a3a3a;
+      padding: 4px 8px;
+      border-radius: 8px;
+      color: #ffd700;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .back-btn {
+      background: #ffd700;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 40px;
+      font-weight: bold;
+      font-size: 16px;
+      color: #1e1e1e;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 0 #b89e00;
+      transition: 0.15s;
+      margin-top: 8px;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      background: #ffe44d;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #b89e00;
+    }
+    .back-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #b89e00;
+    }
+    .note {
+      color: #888;
+      font-size: 12px;
+      margin-top: 18px;
+      border-top: 1px solid #3a3a3a;
+      padding-top: 16px;
+    }
+    .note a {
+      color: #ffd700;
+      text-decoration: none;
+    }
+    .note a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>V model</h1>
+    <div class="image-wrapper" id="imageContainer">
+      <!-- Image injected here -->
+    </div>
+    <button class="back-btn" onclick="window.close();">
+      ← Back to Gold Monitor
+    </button>
+    <div class="note">
+      Picture hosted on GitHub · 
+      <span id="imgStatus">loading…</span>
+    </div>
+  </div>
+  <script>
+    const GITHUB_IMAGE_URL = "${imageUrl}";
+    
+    const container = document.getElementById('imageContainer');
+    const statusSpan = document.getElementById('imgStatus');
+
+    if (GITHUB_IMAGE_URL.includes('yourusername') || GITHUB_IMAGE_URL.includes('your-image')) {
+      container.innerHTML = \`
+        <div class="placeholder-msg">
+          ⚠️ <strong>No image configured yet.</strong><br><br>
+          To display your picture, edit the <code>imageUrl</code> variable inside the 
+          <code>openVModelPage()</code> function in the main page.<br><br>
+          Replace it with the <strong>raw GitHub URL</strong> of your uploaded image, like:<br>
+          <code>https://raw.githubusercontent.com/yourname/repo/main/vmodel.png</code>
+        </div>
+      \`;
+      statusSpan.textContent = 'placeholder (edit imageUrl)';
+    } else {
+      const img = document.createElement('img');
+      img.src = GITHUB_IMAGE_URL;
+      img.alt = 'V model picture';
+      img.onload = () => {
+        container.innerHTML = '';
+        container.appendChild(img);
+        statusSpan.textContent = 'loaded successfully ✓';
+      };
+      img.onerror = () => {
+        container.innerHTML = \`
+          <div class="placeholder-msg">
+            ❌ Could not load the image.<br><br>
+            Make sure the URL is correct and the repository is public.<br>
+            <code>\${GITHUB_IMAGE_URL}</code>
+          </div>
+        \`;
+        statusSpan.textContent = 'failed to load';
+      };
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.close();
+    });
+  <\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+        win.document.write(pageContent);
+        win.document.close();
+    } else {
+        alert('Please allow pop-ups for this site to open the V model page.');
+    }
+}
             const pageContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
