@@ -1,3 +1,3 @@
-![Forecast Chart](forecast_chart.png)
+![Forecast Chart](chart2.png)
 
-*Last Updated: 11/16/2026, 9:21:38 PM*
+*Latest upload: 11/16/2026, 9:33:14 PM*
