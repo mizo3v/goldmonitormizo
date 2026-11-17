@@ -3,149 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Live Dashboard Values</title>
+<title>Gold Monitor — Public View</title>
 <style>
-  *{box-sizing:border-box}
-  body{font-family:system-ui,Arial,sans-serif;background:#121212;color:#e6edf3;margin:0;padding:40px 24px;max-width:1000px;margin:auto;text-align:center}
-  h1{font-size:24px;margin-bottom:8px}
-  .sub{font-size:14px;color:#8b949e;margin-bottom:32px}
-  
-  .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;margin-bottom:24px}
-  .card{background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:20px;text-align:left}
-  .card h3{margin:0 0 12px;font-size:14px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #333;padding-bottom:8px}
-  .row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:15px}
-  .row span:last-child{font-weight:bold;font-family:monospace;font-size:16px}
-  
-  .up{color:#3fb950}
-  .down{color:#f85149}
-  .neutral{color:#d29922}
-  
-  .btn{background:#1d4ed8;color:white;border:none;padding:10px 20px;border-radius:6px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-block;margin-top:16px}
-  .btn:hover{background:#2563eb}
-  
-  .status{font-size:12px;color:#8b949e;margin-top:24px}
-  .error{color:#f85149;background:#2a1215;padding:16px;border-radius:8px;border:1px solid #f85149;margin-bottom:24px}
-  
-  @media(max-width:600px){ .grid{grid-template-columns:1fr} }
+  body{font-family:system-ui;background:#121212;color:#e6edf3;padding:24px;max-width:1000px;margin:auto}
+  h1{font-size:20px;color:#ffd700}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+  .card{background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:14px;text-align:center}
+  .card h3{margin:0 0 8px;font-size:12px;color:#8b949e;text-transform:uppercase}
+  .val{font-size:20px;font-weight:700;color:#eab308}
+  .up{color:#3fb950}.down{color:#f85149}
+  .imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .imgs img{width:100%;border-radius:10px;border:1px solid #333}
+  .meta{font-size:12px;color:#8b949e;margin-top:8px}
+  .btn{background:#1d4ed8;border:none;padding:8px 16px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px}
 </style>
 </head>
 <body>
 
-  <h1>📊 Live Dashboard Data</h1>
-  <div class="sub">Latest values pushed from your local PC</div>
+<h1>🥇 Gold Monitor — Public View</h1>
+<div class="meta" id="stamp">Loading snapshot…</div>
+<button class="btn" style="margin:12px 0" onclick="load()">🔄 Reload</button>
 
-  <div id="errorBox" class="error" style="display:none;"></div>
+<div class="cards" id="cards"></div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>Market Info</h3>
-      <div class="row"><span>Time</span><span id="val-time">—</span></div>
-      <div class="row"><span>Live Price</span><span id="val-price">—</span></div>
-      <div class="row"><span>Unit</span><span id="val-unit">—</span></div>
-      <div class="row"><span>Active Model</span><span id="val-model">—</span></div>
-    </div>
-
-    <div class="card">
-      <h3>Model Scores</h3>
-      <div class="row"><span>Daily</span><span id="val-daily">—</span></div>
-      <div class="row"><span>Weekly</span><span id="val-weekly">—</span></div>
-      <div class="row"><span>Monthly</span><span id="val-monthly">—</span></div>
-      <div class="row"><span>Long-Term</span><span id="val-longterm">—</span></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Factor States</h3>
-    <div id="factor-list"></div>
-  </div>
-
-  <br>
-  <a href="./index.html" class="btn">Go to Main Dashboard</a>
-
-  <div class="status" id="statusText">Loading data from GitHub...</div>
+<h2 style="font-size:14px;color:#8b949e;margin-top:24px">Charts</h2>
+<div class="imgs" id="imgs"></div>
 
 <script>
-  // Fetch the JSON file from the same GitHub repository
-  const JSON_URL = './dashboard_data.json';
+// ---- EDIT ONLY THESE 2 LINES ----
+const OWNER = 'your-github-username';
+const REPO  = 'your-repo-name';
+// ----------------------------------
 
-  async function loadData() {
-    try {
-      // Add a timestamp to bypass browser caching
-      const res = await fetch(`${JSON_URL}?t=${Date.now()}`);
-      
-      if (!res.ok) {
-        throw new Error(`Failed to load JSON (Status: ${res.status}). Make sure you have pushed values using the "Push Values to GitHub" button.`);
-      }
+const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main`;
 
-      const data = await res.json();
-      
-      // Update UI
-      document.getElementById('statusText').textContent = `Last updated: ${new Date(data.timestamp).toLocaleString()}`;
-      
-      document.getElementById('val-time').textContent = new Date(data.timestamp).toLocaleTimeString();
-      
-      // Format price
-      const price = data.currentPrice;
-      let formattedPrice = price;
-      if (data.selectedUnit === 'g') formattedPrice = (price / 31.1034768).toFixed(2) + ' (g)';
-      else if (data.selectedUnit === 'coin') formattedPrice = (20 + (7 * (price / 31.1034768))).toFixed(2) + ' (coin)';
-      else formattedPrice = '$' + price.toFixed(2);
-      
-      document.getElementById('val-price').textContent = formattedPrice;
-      document.getElementById('val-unit').textContent = data.selectedUnit.toUpperCase();
-      document.getElementById('val-model').textContent = data.activeModel;
+async function load() {
+  document.getElementById('stamp').textContent = 'Loading…';
+  try {
+    // numbers
+    const r = await fetch(`${RAW}/dashboard_data.json?cache=${Date.now()}`);
+    const d = await r.json();
 
-      // Model Scores
-      const weekly = data.modelScores.Weekly;
-      const monthly = data.modelScores.Monthly;
-      
-      const getClass = (val) => val > 55 ? 'up' : val < 45 ? 'down' : 'neutral';
-      
-      document.getElementById('val-daily').textContent = data.modelScores.Daily.toFixed(1) + '%';
-      document.getElementById('val-daily').className = getClass(data.modelScores.Daily);
-      
-      document.getElementById('val-weekly').textContent = weekly.toFixed(1) + '%';
-      document.getElementById('val-weekly').className = getClass(weekly);
-      
-      document.getElementById('val-monthly').textContent = monthly.toFixed(1) + '%';
-      document.getElementById('val-monthly').className = getClass(monthly);
-      
-      document.getElementById('val-longterm').textContent = data.modelScores.LongTerm.toFixed(1) + '%';
-      document.getElementById('val-longterm').className = getClass(data.modelScores.LongTerm);
+    document.getElementById('stamp').textContent =
+      `Snapshot: ${new Date(d.timestamp).toLocaleString()} · ` +
+      `Unit: ${d.selectedUnit} · Active model: ${d.activeModel}`;
 
-      // Factors
-      const factorList = document.getElementById('factor-list');
-      factorList.innerHTML = '';
-      
-      const FACTOR_NAMES = {
-        f1: 'Fed policy / real yields', f2: 'US Dollar index (DXY)', f3: 'Central bank buying',
-        f4: 'Geopolitics / safe haven', f5: 'Inflation expectations', f6: 'ETF & futures flows',
-        f7: 'Physical demand', f8: 'Fiscal / debt stress', f9: 'New demand (stablecoins)', f10: 'Supply / recycling'
-      };
+    document.getElementById('cards').innerHTML = `
+      <div class="card"><h3>Price</h3><div class="val">$${Number(d.currentPrice).toFixed(2)}</div></div>
+      <div class="card"><h3>Daily</h3><div class="val ${cls(d.modelScores.Daily)}">${d.modelScores.Daily.toFixed(1)}%</div></div>
+      <div class="card"><h3>Weekly</h3><div class="val ${cls(d.modelScores.Weekly)}">${d.modelScores.Weekly.toFixed(1)}%</div></div>
+      <div class="card"><h3>Monthly</h3><div class="val ${cls(d.modelScores.Monthly)}">${d.modelScores.Monthly.toFixed(1)}%</div></div>
+      <div class="card"><h3>Long-term</h3><div class="val ${cls(d.modelScores.LongTerm)}">${d.modelScores.LongTerm.toFixed(1)}%</div></div>
+    `;
 
-      for (const [key, val] of Object.entries(data.factorStates)) {
-        const name = FACTOR_NAMES[key] || key;
-        const colorClass = val > 0 ? 'up' : val < 0 ? 'down' : 'neutral';
-        
-        factorList.innerHTML += `
-          <div class="row">
-            <span>${name}</span>
-            <span class="${colorClass}">${val > 0 ? '+' : ''}${val.toFixed(1)}</span>
-          </div>
-        `;
-      }
+    // images — cache-buster so uploads show immediately
+    const t = Date.now();
+    document.getElementById('imgs').innerHTML = ['chart2','chart3','chart6']
+      .map(name => `<img src="${RAW}/${name}.png?t=${t}" alt="${name}">`).join('');
 
-    } catch (err) {
-      console.error(err);
-      document.getElementById('errorBox').style.display = 'block';
-      document.getElementById('errorBox').textContent = err.message;
-      document.getElementById('statusText').textContent = 'Error loading data.';
-    }
+  } catch (e) {
+    document.getElementById('stamp').textContent = '⚠️ Could not load snapshot: ' + e.message;
   }
+}
 
-  // Load immediately, then refresh every 30 seconds to stay live
-  loadData();
-  setInterval(loadData, 30000);
+function cls(v){ return v >= 55 ? 'up' : v <= 45 ? 'down' : ''; }
+
+load();
+setInterval(load, 60_000);   // auto-refresh every minute
 </script>
 </body>
 </html>
