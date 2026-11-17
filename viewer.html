@@ -1,75 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gold Monitor — Public View</title>
-<style>
-  body{font-family:system-ui;background:#121212;color:#e6edf3;padding:24px;max-width:1000px;margin:auto}
-  h1{font-size:20px;color:#ffd700}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
-  .card{background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:14px;text-align:center}
-  .card h3{margin:0 0 8px;font-size:12px;color:#8b949e;text-transform:uppercase}
-  .val{font-size:20px;font-weight:700;color:#eab308}
-  .up{color:#3fb950}.down{color:#f85149}
-  .imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-  .imgs img{width:100%;border-radius:10px;border:1px solid #333}
-  .meta{font-size:12px;color:#8b949e;margin-top:8px}
-  .btn{background:#1d4ed8;border:none;padding:8px 16px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px}
-</style>
-</head>
-<body>
-
-<h1>🥇 Gold Monitor — Public View</h1>
-<div class="meta" id="stamp">Loading snapshot…</div>
-<button class="btn" style="margin:12px 0" onclick="load()">🔄 Reload</button>
-
-<div class="cards" id="cards"></div>
-
-<h2 style="font-size:14px;color:#8b949e;margin-top:24px">Charts</h2>
-<div class="imgs" id="imgs"></div>
-
-<script>
-// ---- EDIT ONLY THESE 2 LINES ----
-const OWNER = 'your-github-username';
-const REPO  = 'your-repo-name';
-// ----------------------------------
-
-const RAW = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main`;
-
 async function load() {
   document.getElementById('stamp').textContent = 'Loading…';
+  const url = `${RAW}/dashboard_data.json?t=${Date.now()}`;
+  console.log('Fetching:', url);
+
+  let r;
   try {
-    // numbers
-    const r = await fetch(`${RAW}/dashboard_data.json?cache=${Date.now()}`);
-    const d = await r.json();
-
-    document.getElementById('stamp').textContent =
-      `Snapshot: ${new Date(d.timestamp).toLocaleString()} · ` +
-      `Unit: ${d.selectedUnit} · Active model: ${d.activeModel}`;
-
-    document.getElementById('cards').innerHTML = `
-      <div class="card"><h3>Price</h3><div class="val">$${Number(d.currentPrice).toFixed(2)}</div></div>
-      <div class="card"><h3>Daily</h3><div class="val ${cls(d.modelScores.Daily)}">${d.modelScores.Daily.toFixed(1)}%</div></div>
-      <div class="card"><h3>Weekly</h3><div class="val ${cls(d.modelScores.Weekly)}">${d.modelScores.Weekly.toFixed(1)}%</div></div>
-      <div class="card"><h3>Monthly</h3><div class="val ${cls(d.modelScores.Monthly)}">${d.modelScores.Monthly.toFixed(1)}%</div></div>
-      <div class="card"><h3>Long-term</h3><div class="val ${cls(d.modelScores.LongTerm)}">${d.modelScores.LongTerm.toFixed(1)}%</div></div>
-    `;
-
-    // images — cache-buster so uploads show immediately
-    const t = Date.now();
-    document.getElementById('imgs').innerHTML = ['chart2','chart3','chart6']
-      .map(name => `<img src="${RAW}/${name}.png?t=${t}" alt="${name}">`).join('');
-
+    r = await fetch(url, { cache: 'no-store' });
   } catch (e) {
-    document.getElementById('stamp').textContent = '⚠️ Could not load snapshot: ' + e.message;
+    document.getElementById('stamp').textContent = '❌ Network error: ' + e.message;
+    return;
   }
+
+  console.log('HTTP status:', r.status, r.url);
+
+  const text = await r.text();
+  console.log('First 100 chars of response:', text.slice(0, 100));
+
+  if (!r.ok) {
+    document.getElementById('stamp').textContent =
+      `❌ HTTP ${r.status} — file not found at ${url}. Check OWNER / REPO / branch (main vs master).`;
+    return;
+  }
+
+  if (text.trim().startsWith('<')) {
+    document.getElementById('stamp').textContent =
+      '❌ Server returned HTML, not JSON. The file path or branch is wrong.';
+    return;
+  }
+
+  let d;
+  try {
+    d = JSON.parse(text);
+  } catch (e) {
+    document.getElementById('stamp').textContent =
+      `❌ Invalid JSON: ${e.message}. First 60 chars: ${text.slice(0, 60)}`;
+    return;
+  }
+
+  // success — render as before
+  document.getElementById('stamp').textContent =
+    `Snapshot: ${new Date(d.timestamp).toLocaleString()} · Unit: ${d.selectedUnit} · Model: ${d.activeModel}`;
+
+  document.getElementById('cards').innerHTML = `
+    <div class="card"><h3>Price</h3><div class="val">$${Number(d.currentPrice).toFixed(2)}</div></div>
+    <div class="card"><h3>Daily</h3><div class="val ${cls(d.modelScores.Daily)}">${d.modelScores.Daily.toFixed(1)}%</div></div>
+    <div class="card"><h3>Weekly</h3><div class="val ${cls(d.modelScores.Weekly)}">${d.modelScores.Weekly.toFixed(1)}%</div></div>
+    <div class="card"><h3>Monthly</h3><div class="val ${cls(d.modelScores.Monthly)}">${d.modelScores.Monthly.toFixed(1)}%</div></div>
+    <div class="card"><h3>Long-term</h3><div class="val ${cls(d.modelScores.LongTerm)}">${d.modelScores.LongTerm.toFixed(1)}%</div></div>
+  `;
+
+  const t = Date.now();
+  document.getElementById('imgs').innerHTML = ['chart2','chart3','chart6']
+    .map(name => `<img src="${RAW}/${name}.png?t=${t}" alt="${name}" onerror="this.style.opacity=0.3">`)
+    .join('');
 }
-
-function cls(v){ return v >= 55 ? 'up' : v <= 45 ? 'down' : ''; }
-
-load();
-setInterval(load, 60_000);   // auto-refresh every minute
-</script>
-</body>
-</html>
