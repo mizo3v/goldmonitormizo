@@ -192,7 +192,10 @@
             transform: scale(1.02);
         }
         .vmodel-btn:active {
-            transform: scale(0.98);
+             padding: 5px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    font-weight: 600;
         }
     </style>
 </head>
@@ -219,9 +222,7 @@
             </div>
 
             <!-- V MODEL BUTTON: moved to right, no icon -->
-          <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
-    <!-- NEW: Navigate to viewer.html -->
-    <div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0; align-items:flex-end;">
+<div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0; align-items:flex-end;">
     <button onclick="window.location.href='viewer.html'"
             style="background:#3a6ea5; color:#fff; border:1px solid #5f8bc9;
                    border-radius:16px; padding:7px 6px; font-size:14px;
@@ -234,6 +235,7 @@
                    font-weight:600; cursor:pointer; white-space:nowrap;">
         V model
     </button>
+</div>
         </div>
 
         <div class="chart-container">
