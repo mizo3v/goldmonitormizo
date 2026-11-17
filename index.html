@@ -219,9 +219,17 @@
             </div>
 
             <!-- V MODEL BUTTON: moved to right, no icon -->
-            <button class="vmodel-btn" id="vModelBtn" onclick="openVModelPage()">
-                V model
-            </button>
+          <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+    <!-- NEW: Navigate to viewer.html -->
+    <button class="vmodel-btn" id="viewerBtn" onclick="window.location.href='viewer.html'">
+        V model page
+    </button>
+
+    <!-- Original popup button -->
+    <button class="vmodel-btn" id="vModelBtn" onclick="openVModelPage()">
+        V model
+    </button>
+</div>
         </div>
 
         <div class="chart-container">
