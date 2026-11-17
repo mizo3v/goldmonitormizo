@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-11-17T20:25:28.053Z",
+  "currentPrice": 3840.52,
+  "selectedUnit": "g",
+  "activeModel": "T1",
+  "modelScores": {
+    "Daily": 50.40499114288245,
+    "Weekly": 50.40499114288245,
+    "Monthly": 50.24749797856356,
+    "LongTerm": 50
+  },
+  "factorStates": {
+    "f1": 0,
+    "f2": 0.09,
+    "f3": 0,
+    "f4": 0,
+    "f5": 0,
+    "f6": 0,
+    "f7": 0,
+    "f8": 0,
+    "f9": 0,
+    "f10": 0
+  }
+}
