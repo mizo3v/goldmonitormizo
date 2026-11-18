@@ -16,5 +16,11 @@
     "actualNextDayPrice": 3723.08,
     "predictedNextDayPrice": 3721.6150512326003,
     "vScore": -1.1255274121945122
+  },
+  {
+    "date": "2026-11-18T22:10:26.465Z",
+    "actualNextDayPrice": 3723.06,
+    "predictedNextDayPrice": 3721.595211986333,
+    "vScore": -1.125739097961389
   }
 ]
