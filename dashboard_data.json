@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-20T15:37:43.851Z",
-  "currentPrice": 3550.87,
+  "timestamp": "2026-11-20T15:52:40.899Z",
+  "currentPrice": 3546.46,
   "selectedUnit": "coin",
   "activeModel": "V",
   "modelScores": {
-    "Daily": 43.31695875904747,
-    "Weekly": 43.31695875904747,
-    "Monthly": 38.65768387553409,
+    "Daily": 43.327361083095745,
+    "Weekly": 43.327361083095745,
+    "Monthly": 38.91783500519351,
     "LongTerm": 50
   }
 }
