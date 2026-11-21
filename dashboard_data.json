@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-21T17:07:15.290Z",
-  "currentPrice": 3555.09,
+  "timestamp": "2026-11-21T17:38:22.699Z",
+  "currentPrice": 3552.17,
   "selectedUnit": "coin",
-  "activeModel": "Fibo",
+  "activeModel": "V",
   "modelScores": {
-    "Daily": 48.281676957001956,
-    "Weekly": 48.281676957001956,
-    "Monthly": 48.94965454331766,
+    "Daily": 19.43482381459003,
+    "Weekly": 19.43482381459003,
+    "Monthly": 9.586827061942266,
     "LongTerm": 50
   }
 }
