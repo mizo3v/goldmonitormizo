@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-23T17:25:39.006Z",
-  "currentPrice": 3657.03,
+  "timestamp": "2026-11-23T17:27:05.211Z",
+  "currentPrice": 3656.48,
   "selectedUnit": "g",
   "activeModel": "V",
   "modelScores": {
-    "Daily": 28.496429822192937,
-    "Weekly": 28.496429822192937,
-    "Monthly": 22.06341444993925,
+    "Daily": 28.405861809960225,
+    "Weekly": 28.405861809960225,
+    "Monthly": 22.05223265746726,
     "LongTerm": 50
   }
 }
