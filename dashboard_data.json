@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-24T20:36:32.826Z",
-  "currentPrice": 3544.25,
+  "timestamp": "2026-11-24T20:38:16.309Z",
+  "currentPrice": 3543.65,
   "selectedUnit": "oz",
   "activeModel": "V",
   "modelScores": {
-    "Daily": 50.19497271657284,
-    "Weekly": 50.19497271657284,
-    "Monthly": 44.709281480646034,
+    "Daily": 49.94347182180584,
+    "Weekly": 49.94347182180584,
+    "Monthly": 44.38582051801131,
     "LongTerm": 50
   }
 }
