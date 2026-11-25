@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-25T12:34:32.804Z",
-  "currentPrice": 3517.81,
+  "timestamp": "2026-11-25T12:38:46.782Z",
+  "currentPrice": 3522.53,
   "selectedUnit": "g",
-  "activeModel": "Brev",
+  "activeModel": "V",
   "modelScores": {
-    "Daily": 63.04398519512206,
-    "Weekly": 63.04398519512206,
-    "Monthly": 71.03652788314395,
+    "Daily": 39.61005443112859,
+    "Weekly": 39.61005443112859,
+    "Monthly": 34.21083508472856,
     "LongTerm": 50
   }
 }
