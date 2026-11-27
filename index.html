@@ -295,7 +295,15 @@
             if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        document.addEventListener('click', unlockAudio, { once: true });
+       document.addEventListener('click', function() {
+    unlockAudio();
+    // If they already activated it previously, update the text so they know sound is ready
+    if (localStorage.getItem("gold_activated") === "true") {
+        document.getElementById("enableBtn").innerText = "🔊 Sound Unlocked & Activated";
+        document.getElementById("enableBtn").style.backgroundColor = "#4CAF50";
+        document.getElementById("enableBtn").style.color = "white";
+    }
+}, { once: true });
 
         // ---- V MODEL PAGE (GitHub-hosted images) ----
         function openVModelPage() {
